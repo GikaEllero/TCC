@@ -1,23 +1,38 @@
 import pandas as pd
-import matplotlib.pyplot as plt
-import numpy as np
+import psycopg2
+
+# Configurações
 pd.set_option('display.max_columns', None)
 
-df = pd.read_excel("SPDadosCriminais_2022-2022_1.xlsx")
+# Conectando ao Banco de Dados
+host = '********'
+database = '***********'
+user = '*********'
+password = '**********'
 
-# Filtrando dados para o tipo de roubo e a região que iremos estudar
-cidades = ['S.ANDRE', "S.BERNARDO DO CAMPO", 'S.CAETANO DO SUL']
-natureza = ["FURTO - OUTROS", "FURTO DE CARGA", "FURTO DE VEÍCULO", "ROUBO - OUTROS", "ROUBO DE CARGA", "ROUBO DE VEÍCULO"]
-df = df.loc[df['CIDADE'].isin(cidades)]
-df = df.loc[(df['ANO_BO'] == 2022)]
-df = df.loc[df['NATUREZA_APURADA'].isin(natureza)]
+conn = psycopg2.connect(
+    host=host,
+    database=database,
+    user=user,
+    password=password
+)
+
+# Consultar informações do banco de dados
+table_name = 'Dados_Criminais_ABC_2022'
+sql_query = 'SELECT * FROM "{}";'.format(table_name)
+
+df = pd.read_sql_query(sql_query, conn)
+
+# Fechar conexão
+conn.close()
+
+print(df.isnull().sum())
+
+# Filtrando informações relevantes
+# df = df.loc[(df['ANO_BO'] == 2022)]
+# df = df.loc[(df['LOGRADOURO'] != "VEDAÇÃO DA DIVULGAÇÃO DOS DADOS RELATIVOS")]
 
 # Remover linhas nulas das colunas necessárias
-df.dropna(subset=['DATA_OCORRENCIA_BO', 'DATA_COMUNICACAO_BO'], inplace=True)
+# df.dropna(subset=['DATA_OCORRENCIA_BO', 'DATA_COMUNICACAO_BO'], inplace=True)
 
-# Modificar o tipo de dado considerado no dataframe
-df["DATA_OCORRENCIA_BO"] = pd.to_datetime(df["DATA_OCORRENCIA_BO"])
-df["NUM_BO"] = df["NUM_BO"].astype("int64")
-df["DATA_OCORRENCIA_BO"] = pd.to_datetime(df["DATA_OCORRENCIA_BO"], format='%H:%M:%S')
-
-print(df.head())
+print(df.shape)
